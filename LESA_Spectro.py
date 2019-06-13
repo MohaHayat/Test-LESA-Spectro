@@ -84,8 +84,6 @@ class Spectro:
         # check to see if the max intensity value is in the desired range and change integration time
         checker = self.int_check(self.desired_max, self.desired_low, max_int)
 
-        counter = 0
-
         # while the checker value is not true, and the max int value is not in range.
         while not checker:
 
@@ -133,7 +131,7 @@ class Spectro:
     # DESC: get singular plot of the current spectrum
     # IN: none
     # OUT: a plot of the spectrum, return FLAG
-    def get_spectrum_plot(self, secs):
+    def get_spectrum_plot(self):
         spec_wave, spec_inten, self.FLAG = self.get_spectrum(1)
 
         self.plot_graph(spec_wave, spec_inten)

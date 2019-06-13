@@ -1,0 +1,153 @@
+import seabreeze.spectrometers as sb
+import matplotlib.pyplot as plt
+import time
+
+
+def main():
+    print("Start \n")
+
+    spec = init_device()
+
+    desired_low, desired_max, int_time, runs = initialize_parameters(spec)
+
+    # get dark spectrum reading
+    dark_inten = get_dark(spec)
+
+    # continuous spectrum readings
+    count = 0
+    while count <= runs:
+
+        # dark_inten = get_dark(spec)
+        get_spectrum(spec, desired_max, desired_low, int_time, dark_inten)
+
+        count += 1
+
+    print("End \n")
+
+
+# IN: x axis array of wave length
+# OUT: x,y graphical plot
+def plot_graph(wave_array, inten_array):
+
+    # --- DISPLAY DATA---
+    plt.xlabel('Wave Length')
+    plt.ylabel('Intensity')
+
+    # type of data plot
+    plt.plot(wave_array, inten_array)
+
+    # plot
+    plt.show()
+
+
+# IN: max intensity range, low intensity range, max value of given spectrum
+# OUT: bool TRUE, int 1, or int 2 depending on if the max value of the given spectrum is in the desired range
+def int_check(range_max, range_low, val, int_time):
+
+    print("Running... \n")
+    if (val < range_max) and (val > range_low):
+        print("Intensity val in range \n")
+        return True, int_time
+    elif val > range_max:
+        print("1: intensity val above max  \n")
+        int_time -= 5000
+
+        return 1, int_time
+    else:
+        print("2: intensity val below max \n")
+        int_time += 5000
+        return 2, int_time
+
+
+def get_spectrum(spec, desired_max, desired_low, int_time, dark_inten):
+
+    spec.integration_time_micros(int_time)
+
+    spec_wave = spec.wavelengths()
+
+    spec_inten = spec.intensities(correct_dark_counts=True, correct_nonlinearity=True)
+
+    spec_inten -= dark_inten
+
+    # get the maximum intensity of the first read
+    max_int = max(spec_inten)
+
+    print("The max intensity is:", max_int, "\n")
+
+    checker, int_time = int_check(desired_max, desired_low, max_int, int_time)
+    while checker != True:
+
+        spec.integration_time_micros(int_time)
+
+        spec_wave = spec.wavelengths()
+
+        # wait
+        pause(.1)
+
+        spec_inten = spec.intensities(correct_dark_counts=True, correct_nonlinearity=True)
+
+        spec_inten -= dark_inten
+
+        max_int = max(spec_inten)
+
+        checker, int_time = int_check(desired_max, desired_low, max_int, int_time)
+
+    # produce a new graph
+    plot_graph(spec_wave, spec_inten)
+
+
+def pause(secs):
+
+    print("waiting...\n")
+    time.sleep(secs)
+
+
+def get_dark(spec):
+
+    print("Place cap on spectrometer. \n")
+    print("Getting dark reading... \n")
+
+    input("Press any key to continue...")
+
+    spec_inten = spec.intensities(correct_dark_counts=True, correct_nonlinearity=True)
+
+    return spec_inten
+
+
+def initialize_parameters(spec):
+
+    # desired_max = 84000
+    # desired_low = 76000
+
+    # int_time = 10000000
+
+    print("Enter lower intensity bound \n")
+    desired_low = int(input())
+
+    print("Enter upper intensity bound \n")
+    desired_max = int(input())
+
+    print("Enter desired integration time \n")
+    int_time = int(input())
+
+    print("How many runs? \n")
+    runs = int(input())
+
+    spec.integration_time_micros(int_time)
+
+    return desired_low, desired_max, int_time, runs
+
+
+def init_device():
+
+    # call list of all connected spectrometers
+    devices = sb.list_devices()
+    # create object for spectrometers(s)
+    spec = sb.Spectrometer(devices[0])
+
+    # print device properties
+    print("Connected to:", spec.model, "-", spec.serial_number, " with ", spec.pixels, " pixels", "\n")
+
+    return spec
+
+main()
