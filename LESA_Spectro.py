@@ -27,7 +27,6 @@ class Spectro:
     # IN: x axis array of wave length
     # OUT: x,y graphical plot
     def plot_graph(self, wave_array, inten_array):
-        print("Plotting Graph \n")
 
         # --- DISPLAY DATA---
         plt.xlabel('Wave Length')
@@ -179,7 +178,7 @@ class Spectro:
     # OUT: create file named whatever the time is, save the wave len spectrum to the file
     def create_file(self):
         now = datetime.datetime.now()
-        self.file_name = str(now.month) + '.' + str(now.day) + '.' + str(now.hour) + "." + str(now.min)
+        self.file_name = str(now.month) + '-' + str(now.day) + '-' + str(now.hour) + "-" + str(now.min)
 
         spec_wave = self.spec.wavelengths()
 
@@ -194,7 +193,7 @@ class Spectro:
 
         file = open(self.file_name, 'a+')                   # open file to append
 
-        file.write("K \n")                                  # row delimiter
+        file.write("K \n")                                  # row delimiter -  new entry is separated by k
 
         np.savetxt(file, spec_inten, fmt='%10.5f')         # append data to file
 
@@ -204,26 +203,24 @@ class Spectro:
 
     def which_device(self):
 
-        return "Connected to:", self.spec.model, "-", self.spec.serial_number, " with ", self.spec.pixels, " pixels", "\n"
+        return self.spec.model, self.spec.serial_number, self.spec.pixels       # return device specifications
 
 
 if __name__ == '__main__':
 
-    jz = Spectro(50000, 75000, 10000)
+    jz = Spectro(10000, 60000, 10000)
 
-    jz.which_device()
-    FLAG = 1
+    print(jz.which_device())
+
+    jz.get_dark()
     jz.create_file()
 
-    while FLAG != 0:
-        FLAG = jz.get_dark()
-        jz.pause(1)
-    b = 0
-    a = 0
-    count = 0
-    while count <= 10:
-        jz.get_spectrum(.1)
-        a, b, FLAG = jz.get_spectrum(.1)
-        jz.add_to_file(b)
-        count += 1
+    counter = 0
+    flag = 0
 
+    while counter <= 5:
+        a, b, flag = jz.get_spectrum(0)
+        jz.add_to_file(b)
+        counter += 1
+
+    jz.get_spectrum_plot()
