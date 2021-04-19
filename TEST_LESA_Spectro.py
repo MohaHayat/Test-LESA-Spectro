@@ -5,6 +5,11 @@ import datetime
 import numpy as np
 
 
+#************
+# This is a test file. 
+# The real repo can be found on LESA's github
+#************
+
 class Spectro:
     def __init__(self, desired_low, desired_max, int_time):
 
